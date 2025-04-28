@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/coolrunner1/project/internal"
+	"github.com/coolrunner1/project/utils/filter"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +19,7 @@ func ApplicationCliInit() {
 		Use: "bloomTest",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("Hello World")
-			bloomFilter := internal.NewBloomFilter(10, 0.01)
+			bloomFilter := filter.NewBloomFilter(10, 0.01)
 			bloomFilter.Add([]byte("1232"))
 			fmt.Println(bloomFilter.Check([]byte("test")))
 			fmt.Println(bloomFilter.Check([]byte("dsfgfsdf324")))
@@ -47,7 +47,7 @@ func ApplicationCliInit() {
 				fmt.Println(err)
 				return
 			}
-			bloomFilter := internal.NewBloomFilter(10, 0.01)
+			bloomFilter := filter.NewBloomFilter(10, 0.01)
 			for {
 				fmt.Println("1 - Add a new rule")
 				fmt.Println("2 - Check if the rule exists")
