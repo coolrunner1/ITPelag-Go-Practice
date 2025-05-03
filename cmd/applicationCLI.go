@@ -180,7 +180,7 @@ func ApplicationCliInit() {
 					}
 					err = leakyBucket.AddPacket(packetSize)
 					if err != nil {
-						fmt.Println(err.(*errors.Error).ErrorStack())
+						fmt.Println(err)
 						continue
 					}
 				case 2:
