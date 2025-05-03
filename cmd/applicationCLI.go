@@ -176,12 +176,12 @@ func ApplicationCliInit() {
 					_, err := fmt.Scan(&packetSize)
 					if err != nil {
 						fmt.Println(err)
-						return
+						continue
 					}
 					err = leakyBucket.AddPacket(packetSize)
 					if err != nil {
 						fmt.Println(err.(*errors.Error).ErrorStack())
-						return
+						continue
 					}
 				case 2:
 					go leakyBucket.Run()
