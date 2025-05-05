@@ -61,14 +61,15 @@ func (bloomFilter *BloomFilter) Add(key []byte) {
 
 func (bloomFilter *BloomFilter) Check(key []byte) bool {
 	hashes := make([]hash.Hash32, bloomFilter.numberOfHashes)
-	for i := range bloomFilter.numberOfHashes {
-		hashes[i] = murmur3.New32WithSeed(i)
-		_, err := hashes[i].Write(key)
+
+	for i, hashElement := range hashes {
+		hashElement = murmur3.New32WithSeed(uint32(i))
+		_, err := hashElement.Write(key)
 		if err != nil {
 			fmt.Println(err)
 			return false
 		}
-		index := hashes[i].Sum32() % bloomFilter.bitsetSize
+		index := hashElement.Sum32() % bloomFilter.bitsetSize
 		if !bloomFilter.bitset[index] {
 			return false
 		}
