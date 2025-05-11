@@ -37,38 +37,44 @@ func calculateNumberOfHashes(expectedNumOfElements, bitsetSize uint32) uint32 {
 }
 
 func (bloomFilter *BloomFilter) Add(key []byte) {
-	hashes := make([]hash.Hash32, bloomFilter.numberOfHashes)
 	var wg sync.WaitGroup
-	for i := range bloomFilter.numberOfHashes {
+	var i uint32
+
+	bitset := bloomFilter.bitset
+	for i = 0; i < bloomFilter.numberOfHashes; i++ {
 		wg.Add(1)
-		go func() {
+		go func(seed uint32) {
 			defer wg.Done()
-			hashes[i] = murmur3.New32WithSeed(i)
-			_, err := hashes[i].Write(key)
+			hashEl := murmur3.New32WithSeed(seed)
+			_, err := hashEl.Write(key)
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-			index := hashes[i].Sum32() % bloomFilter.bitsetSize
+			index := hashEl.Sum32() % bloomFilter.bitsetSize
 
-			bloomFilter.bitsetMutex.Lock()
-			bloomFilter.bitset[index] = true
-			bloomFilter.bitsetMutex.Unlock()
-		}()
+			bitset[index] = true
+		}(i)
 	}
+
 	wg.Wait()
+
+	bloomFilter.bitsetMutex.Lock()
+	bloomFilter.bitset = bitset
+	bloomFilter.bitsetMutex.Unlock()
 }
 
 func (bloomFilter *BloomFilter) Check(key []byte) bool {
 	hashes := make([]hash.Hash32, bloomFilter.numberOfHashes)
-	for i := range bloomFilter.numberOfHashes {
-		hashes[i] = murmur3.New32WithSeed(i)
-		_, err := hashes[i].Write(key)
+
+	for i, hashElement := range hashes {
+		hashElement = murmur3.New32WithSeed(uint32(i))
+		_, err := hashElement.Write(key)
 		if err != nil {
 			fmt.Println(err)
 			return false
 		}
-		index := hashes[i].Sum32() % bloomFilter.bitsetSize
+		index := hashElement.Sum32() % bloomFilter.bitsetSize
 		if !bloomFilter.bitset[index] {
 			return false
 		}
