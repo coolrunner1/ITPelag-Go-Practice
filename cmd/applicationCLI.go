@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/coolrunner1/project/router"
+	"github.com/coolrunner1/project/cmd/router"
+	"github.com/coolrunner1/project/cmd/storage"
 	"github.com/coolrunner1/project/utils/filter"
 	"github.com/coolrunner1/project/utils/limiter"
 	"github.com/go-errors/errors"
@@ -204,7 +205,8 @@ func ApplicationCliInit() {
 		Use: "web",
 		Run: func(cmd *cobra.Command, args []string) {
 			e := echo.New()
-			router.TestRoutes(e)
+			router.CommentRoutes(e)
+			storage.InitDB()
 			e.Logger.Fatal(e.Start(":8085"))
 		},
 	}
