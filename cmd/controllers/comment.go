@@ -7,10 +7,6 @@ import (
 	"net/http"
 )
 
-type CommentController interface {
-	GetComments(c echo.Context) error
-}
-
 func GetComments(c echo.Context) error {
 	comments, err := repositories.GetComments()
 	if err != nil {

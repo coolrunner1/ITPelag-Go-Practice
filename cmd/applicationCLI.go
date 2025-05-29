@@ -205,7 +205,7 @@ func ApplicationCliInit() {
 		Use: "web",
 		Run: func(cmd *cobra.Command, args []string) {
 			e := echo.New()
-			router.CommentRoutes(e)
+			router.GetRoutes(e)
 			storage.InitDB()
 			e.Logger.Fatal(e.Start(":8085"))
 		},
