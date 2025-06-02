@@ -2,14 +2,37 @@ package handler
 
 import (
 	"database/sql"
+	"github.com/coolrunner1/project/cmd/dto"
 	"github.com/coolrunner1/project/cmd/model"
 	"github.com/coolrunner1/project/cmd/repository"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"strconv"
 )
 
-func GetCategories(c echo.Context) error {
-	categories, err := repository.GetCategories()
+type CategoryHandler interface {
+	GetCategories(c echo.Context) error
+	GetCategory(c echo.Context) error
+	PostCategory(c echo.Context) error
+	PutCategory(c echo.Context) error
+	DeleteCategory(c echo.Context) error
+}
+
+type categoryHandler struct {
+	categoryRepo repository.CategoryRepository
+	validator    *validator.Validate
+}
+
+func NewCategoryHandler(categoryRepo repository.CategoryRepository) CategoryHandler {
+	return &categoryHandler{
+		categoryRepo: categoryRepo,
+		validator:    validator.New(),
+	}
+}
+
+func (ch *categoryHandler) GetCategories(c echo.Context) error {
+	categories, err := ch.categoryRepo.GetAll()
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusNotFound, "No categories found")
@@ -20,9 +43,12 @@ func GetCategories(c echo.Context) error {
 	return c.JSON(http.StatusOK, categories)
 }
 
-func GetCategory(c echo.Context) error {
-	id := c.Param("id")
-	category, err := repository.GetCategoryById(id)
+func (ch *categoryHandler) GetCategory(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid category ID")
+	}
+	category, err := ch.categoryRepo.GetById(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusNotFound, "No category found")
@@ -33,52 +59,69 @@ func GetCategory(c echo.Context) error {
 	return c.JSON(http.StatusOK, category)
 }
 
-func PostCategory(c echo.Context) error {
-	category := &model.Category{}
-	if err := c.Bind(category); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+func (ch *categoryHandler) PostCategory(c echo.Context) error {
+	categoryDTO := &dto.CategoryDTO{}
+	if err := c.Bind(categoryDTO); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	if category.Title == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Title is required")
+	if err := ch.validator.Struct(categoryDTO); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Validation failed: "+err.Error())
 	}
-	category, err := repository.CreateCategory(*category)
+
+	category := model.Category{
+		Title: categoryDTO.Title,
+	}
+
+	created, err := ch.categoryRepo.Create(category)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusCreated, category)
+	return c.JSON(http.StatusCreated, created)
 }
 
-func PutCategory(c echo.Context) error {
-	id := c.Param("id")
-	category := &model.Category{}
-	if err := c.Bind(category); err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+func (ch *categoryHandler) PutCategory(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid category ID")
 	}
-	if category.Title == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Title is required")
+	categoryDTO := &dto.CategoryDTO{}
+
+	if err := c.Bind(categoryDTO); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	if _, err := repository.GetCategoryById(id); err != nil {
+
+	if err := ch.validator.Struct(categoryDTO); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Validation failed: "+err.Error())
+	}
+
+	category := model.Category{
+		Title: categoryDTO.Title,
+	}
+	if _, err := ch.categoryRepo.GetById(id); err != nil {
 		if err == sql.ErrNoRows {
 			return c.JSON(http.StatusNotFound, "Category not found")
 		}
 	}
-	category, err := repository.UpdateCategory(*category, id)
+	updated, err := ch.categoryRepo.Update(category, id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, category)
+	return c.JSON(http.StatusOK, updated)
 }
 
-func DeleteCategory(c echo.Context) error {
-	id := c.Param("id")
-	if _, err := repository.GetCategoryById(id); err != nil {
+func (ch *categoryHandler) DeleteCategory(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid category ID")
+	}
+	if _, err := ch.categoryRepo.GetById(id); err != nil {
 		if err == sql.ErrNoRows {
-			return echo.NewHTTPError(http.StatusNotFound, "No category by id "+id+" found")
+			return echo.NewHTTPError(http.StatusNotFound, "No category found")
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	err := repository.DeleteCategoryById(id)
+	err = ch.categoryRepo.DeleteById(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusNotFound, "No category found")
