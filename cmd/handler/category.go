@@ -60,7 +60,7 @@ func (ch *categoryHandler) GetCategory(c echo.Context) error {
 }
 
 func (ch *categoryHandler) PostCategory(c echo.Context) error {
-	categoryDTO := &dto.CategoryDTO{}
+	categoryDTO := &dto.CategoryRequest{}
 	if err := c.Bind(categoryDTO); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -84,7 +84,7 @@ func (ch *categoryHandler) PutCategory(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid category ID")
 	}
-	categoryDTO := &dto.CategoryDTO{}
+	categoryDTO := &dto.CategoryRequest{}
 
 	if err := c.Bind(categoryDTO); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())

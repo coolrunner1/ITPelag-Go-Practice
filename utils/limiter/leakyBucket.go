@@ -7,7 +7,16 @@ import (
 	"time"
 )
 
-type LeakyBucket struct {
+type LeakyBucket interface {
+	AddPacket(packetSize uint32) error
+	Run()
+	Stop()
+	getCurrentBucketSize() uint32
+	pushPacket(packetSize uint32)
+	popPacket() uint32
+}
+
+type leakyBucket struct {
 	bucketSize uint32
 	//Queue of packets
 	bucket []uint32
@@ -16,8 +25,8 @@ type LeakyBucket struct {
 	done   chan bool
 }
 
-func NewLeakyBucket(bucketSize uint32, tickRate time.Duration) *LeakyBucket {
-	return &LeakyBucket{
+func NewLeakyBucket(bucketSize uint32, tickRate time.Duration) LeakyBucket {
+	return &leakyBucket{
 		bucketSize: bucketSize,
 		bucket:     make([]uint32, 0),
 		ticker:     time.NewTicker(tickRate * time.Millisecond),
@@ -25,7 +34,7 @@ func NewLeakyBucket(bucketSize uint32, tickRate time.Duration) *LeakyBucket {
 	}
 }
 
-func (lb *LeakyBucket) AddPacket(packetSize uint32) error {
+func (lb *leakyBucket) AddPacket(packetSize uint32) error {
 	lb.mutex.Lock()
 	defer lb.mutex.Unlock()
 
@@ -39,7 +48,7 @@ func (lb *LeakyBucket) AddPacket(packetSize uint32) error {
 	return nil
 }
 
-func (lb *LeakyBucket) Run() {
+func (lb *leakyBucket) Run() {
 	for {
 		select {
 		case <-lb.done:
@@ -57,11 +66,11 @@ func (lb *LeakyBucket) Run() {
 	}
 }
 
-func (lb *LeakyBucket) Stop() {
+func (lb *leakyBucket) Stop() {
 	lb.done <- true
 }
 
-func (lb *LeakyBucket) getCurrentBucketSize() uint32 {
+func (lb *leakyBucket) getCurrentBucketSize() uint32 {
 	var bucketSize uint32
 	for _, el := range lb.bucket {
 		bucketSize += el
@@ -69,11 +78,11 @@ func (lb *LeakyBucket) getCurrentBucketSize() uint32 {
 	return bucketSize
 }
 
-func (lb *LeakyBucket) pushPacket(packetSize uint32) {
+func (lb *leakyBucket) pushPacket(packetSize uint32) {
 	lb.bucket = append(lb.bucket, packetSize)
 }
 
-func (lb *LeakyBucket) popPacket() uint32 {
+func (lb *leakyBucket) popPacket() uint32 {
 	if len(lb.bucket) == 0 {
 		fmt.Println("Bucket is empty")
 		return 0

@@ -8,19 +8,24 @@ import (
 	"sync"
 )
 
-type BloomFilter struct {
+type BloomFilter interface {
+	Add(key []byte)
+	Check(key []byte) bool
+}
+
+type bloomFilter struct {
 	bitsetSize     uint32
 	numberOfHashes uint32
 	bitset         []bool
 	bitsetMutex    sync.Mutex
 }
 
-func NewBloomFilter(expectedNumOfElements uint32, falsePositiveProbability float64) *BloomFilter {
+func NewBloomFilter(expectedNumOfElements uint32, falsePositiveProbability float64) BloomFilter {
 	bitsetSize := calculateBitsetSize(expectedNumOfElements, falsePositiveProbability)
 	numberOfHashes := calculateNumberOfHashes(expectedNumOfElements, bitsetSize)
 	bitset := make([]bool, bitsetSize)
 
-	return &BloomFilter{
+	return &bloomFilter{
 		bitsetSize:     bitsetSize,
 		numberOfHashes: numberOfHashes,
 		bitset:         bitset,
@@ -36,7 +41,7 @@ func calculateNumberOfHashes(expectedNumOfElements, bitsetSize uint32) uint32 {
 	return uint32(float64(bitsetSize/expectedNumOfElements) * math.Log(2))
 }
 
-func (bloomFilter *BloomFilter) Add(key []byte) {
+func (bloomFilter *bloomFilter) Add(key []byte) {
 	var wg sync.WaitGroup
 	var i uint32
 
@@ -64,7 +69,7 @@ func (bloomFilter *BloomFilter) Add(key []byte) {
 	bloomFilter.bitsetMutex.Unlock()
 }
 
-func (bloomFilter *BloomFilter) Check(key []byte) bool {
+func (bloomFilter *bloomFilter) Check(key []byte) bool {
 	hashes := make([]hash.Hash32, bloomFilter.numberOfHashes)
 
 	for i, hashElement := range hashes {
