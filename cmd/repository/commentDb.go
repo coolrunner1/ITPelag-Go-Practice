@@ -1,16 +1,16 @@
-package repositories
+package repository
 
 import (
 	"database/sql"
-	"github.com/coolrunner1/project/cmd/models"
+	"github.com/coolrunner1/project/cmd/model"
 	"github.com/coolrunner1/project/cmd/storage"
 )
 
-func GetComments() ([]models.Comment, error) {
+func GetComments() ([]model.Comment, error) {
 	db := storage.GetDB()
 	sqlStatement := `SELECT * FROM comments;`
 
-	var comments []models.Comment
+	var comments []model.Comment
 
 	rows, err := db.Query(sqlStatement)
 
@@ -19,7 +19,7 @@ func GetComments() ([]models.Comment, error) {
 	}
 
 	for rows.Next() {
-		var c models.Comment
+		var c model.Comment
 		err := rows.Scan(
 			&c.Id,
 			&c.Content,

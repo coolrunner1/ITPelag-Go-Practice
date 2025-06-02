@@ -1,16 +1,16 @@
-package repositories
+package repository
 
 import (
 	"database/sql"
-	"github.com/coolrunner1/project/cmd/models"
+	"github.com/coolrunner1/project/cmd/model"
 	"github.com/coolrunner1/project/cmd/storage"
 )
 
-func GetCategories() ([]models.Category, error) {
+func GetCategories() ([]model.Category, error) {
 	db := storage.GetDB()
 	sqlStatement := `SELECT * FROM categories;`
 
-	var categories []models.Category
+	var categories []model.Category
 
 	rows, err := db.Query(sqlStatement)
 
@@ -19,7 +19,7 @@ func GetCategories() ([]models.Category, error) {
 	}
 
 	for rows.Next() {
-		var c models.Category
+		var c model.Category
 		err := rows.Scan(
 			&c.Id,
 			&c.Title,
@@ -37,9 +37,9 @@ func GetCategories() ([]models.Category, error) {
 	return categories, nil
 }
 
-func GetCategoryById(id string) (*models.Category, error) {
+func GetCategoryById(id string) (*model.Category, error) {
 	db := storage.GetDB()
-	var c models.Category
+	var c model.Category
 	sqlStatement := `SELECT * FROM categories WHERE id = $1;`
 	err := db.QueryRow(sqlStatement, id).Scan(&c.Id, &c.Title)
 
@@ -50,7 +50,7 @@ func GetCategoryById(id string) (*models.Category, error) {
 	return &c, nil
 }
 
-func CreateCategory(c models.Category) (*models.Category, error) {
+func CreateCategory(c model.Category) (*model.Category, error) {
 	db := storage.GetDB()
 	sqlStatement := `INSERT INTO categories (title) VALUES ($1) RETURNING id;`
 	err := db.QueryRow(sqlStatement, c.Title).Scan(&c.Id)
@@ -62,7 +62,7 @@ func CreateCategory(c models.Category) (*models.Category, error) {
 	return &c, nil
 }
 
-func UpdateCategory(c models.Category, id string) (*models.Category, error) {
+func UpdateCategory(c model.Category, id string) (*model.Category, error) {
 	db := storage.GetDB()
 	sqlStatement := `UPDATE categories SET title = $1 WHERE id = $2 RETURNING id;`
 	err := db.QueryRow(sqlStatement, c.Title, id).Scan(&c.Id)

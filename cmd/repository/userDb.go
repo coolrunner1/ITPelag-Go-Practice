@@ -1,16 +1,16 @@
-package repositories
+package repository
 
 import (
 	"database/sql"
-	"github.com/coolrunner1/project/cmd/models"
+	"github.com/coolrunner1/project/cmd/model"
 	"github.com/coolrunner1/project/cmd/storage"
 )
 
-func GetUsers() ([]models.User, error) {
+func GetUsers() ([]model.User, error) {
 	db := storage.GetDB()
 	sqlStatement := `SELECT * FROM users;`
 
-	var users []models.User
+	var users []model.User
 
 	rows, err := db.Query(sqlStatement)
 
@@ -19,7 +19,7 @@ func GetUsers() ([]models.User, error) {
 	}
 
 	for rows.Next() {
-		var user models.User
+		var user model.User
 		err := rows.Scan(
 			&user.Id,
 			&user.Username,
@@ -40,9 +40,9 @@ func GetUsers() ([]models.User, error) {
 	return users, nil
 }
 
-func GetUserById(id int) (*models.User, error) {
+func GetUserById(id int) (*model.User, error) {
 	db := storage.GetDB()
-	var user models.User
+	var user model.User
 	sqlStatement := `SELECT * FROM users WHERE id = $1;`
 	err := db.QueryRow(sqlStatement, id).Scan(
 		&user.Id,
@@ -63,7 +63,7 @@ func GetUserById(id int) (*models.User, error) {
 /*
 ToDo: Hash password with bcrypt
 */
-func CreateUser(user models.User) (*models.User, error) {
+func CreateUser(user model.User) (*model.User, error) {
 	/*db := storage.GetDB()
 	sqlStatement := `INSERT INTO users (username, password, description, createdAt) VALUES ($1, $2, $3, CURRENT_TIMESTAMP) RETURNING id;`
 	err := db.QueryRow(sqlStatement, user.Username, user.Password, user.Description).Scan(&user.Id)

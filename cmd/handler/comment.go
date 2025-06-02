@@ -1,14 +1,14 @@
-package controllers
+package handler
 
 import (
 	"database/sql"
-	"github.com/coolrunner1/project/cmd/repositories"
+	"github.com/coolrunner1/project/cmd/repository"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 func GetComments(c echo.Context) error {
-	comments, err := repositories.GetComments()
+	comments, err := repository.GetComments()
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusNotFound, "No comments found")
