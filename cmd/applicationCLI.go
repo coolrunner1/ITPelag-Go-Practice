@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/coolrunner1/project/cmd/middleware"
 	"github.com/coolrunner1/project/cmd/router"
 	"github.com/coolrunner1/project/cmd/storage"
 	"github.com/coolrunner1/project/utils/filter"
@@ -206,6 +207,13 @@ func ApplicationCliInit() {
 		Run: func(cmd *cobra.Command, args []string) {
 			e := echo.New()
 			storage.InitDB()
+			limiterMiddleware := middleware.NewLimiterMiddleware(
+				1000,
+				0.01,
+				20,
+				3600,
+			)
+			e.Use(limiterMiddleware.Init)
 			router.GetRoutes(e)
 			e.Logger.Fatal(e.Start(":8085"))
 		},

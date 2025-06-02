@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type PostCommentDTO struct {
+type PostCommentResponse struct {
 	Id        int         `json:"id"`
 	Content   string      `json:"content"`
 	AuthorId  int         `json:"authorId"`
@@ -14,7 +14,7 @@ type PostCommentDTO struct {
 	Author    *model.User `json:"author"`
 }
 
-type UserProfileCommentDTO struct {
+type UserProfileCommentResponse struct {
 	Id        int         `json:"id"`
 	Content   string      `json:"content"`
 	AuthorId  int         `json:"authorId"`
