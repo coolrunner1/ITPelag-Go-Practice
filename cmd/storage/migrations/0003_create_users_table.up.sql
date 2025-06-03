@@ -4,11 +4,12 @@ CREATE TABLE IF NOT EXISTS Users
     banner_id          int,
     email              varchar(255) NOT NULL,
     username           varchar(100) NOT NULL,
+    password           varchar(255) NOT NULL,
     description        text,
     avatar_path        varchar(255),
     number_of_posts    int          NOT NULL default (0),
     number_of_comments int          NOT NULL default (0),
-    created_at         date         NOT NULL,
-    updated_at         date         NOT NULL,
+    created_at         timestamp    NOT NULL default (CURRENT_TIMESTAMP),
+    updated_at         timestamp    NOT NULL default (CURRENT_TIMESTAMP),
     FOREIGN KEY (banner_id) REFERENCES Images (id)
 );

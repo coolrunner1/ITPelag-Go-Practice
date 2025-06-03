@@ -58,8 +58,9 @@ func (lb *leakyBucket) Run() {
 		case <-lb.ticker.C:
 			lb.mutex.Lock()
 			if len(lb.bucket) > 0 {
-				packet := lb.popPacket()
-				fmt.Printf("Packet with a size of %d has been popped\n", packet)
+				lb.popPacket()
+				//packet := lb.popPacket()
+				//fmt.Printf("Packet with a size of %d has been popped\n", packet)
 			}
 			lb.mutex.Unlock()
 		}
