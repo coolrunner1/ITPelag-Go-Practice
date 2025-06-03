@@ -9,7 +9,9 @@ import (
 type UserRepository interface {
 	GetAll(start, limit int) ([]model.User, error)
 	GetById(id int) (*model.User, error)
-	//Create(c model.Category) (*model.Category, error)
+	Create(c model.User) (*model.User, error)
+	FindByUsername(username string) (*model.User, error)
+	FindByEmail(email string) (*model.User, error)
 	//Update(c model.Category, id int) (*model.Category, error)
 	//DeleteById(id int) error
 }
@@ -74,10 +76,16 @@ func (r *userRepository) GetById(id int) (*model.User, error) {
 	sqlStatement := `SELECT * FROM users WHERE id = $1;`
 	err := db.QueryRow(sqlStatement, id).Scan(
 		&user.Id,
+		&user.BannerId,
+		&user.Email,
 		&user.Username,
+		&user.Password,
 		&user.Description,
-		//&user.AvatarPath,
+		&user.AvatarPath,
+		&user.NumberOfComments,
+		&user.NumberOfPosts,
 		&user.CreatedAt,
+		&user.UpdatedAt,
 	)
 
 	if err != nil {
@@ -87,18 +95,57 @@ func (r *userRepository) GetById(id int) (*model.User, error) {
 	return &user, nil
 }
 
-// CreateUser /*
-/*
-ToDo: Hash password with bcrypt
-*/
-func CreateUser(user model.User) (*model.User, error) {
-	/*db := storage.GetDB()
-	sqlStatement := `INSERT INTO users (username, password, description, createdAt) VALUES ($1, $2, $3, CURRENT_TIMESTAMP) RETURNING id;`
-	err := db.QueryRow(sqlStatement, user.Username, user.Password, user.Description).Scan(&user.Id)
-
+func (r *userRepository) Create(user model.User) (*model.User, error) {
+	sqlStatement := `INSERT INTO users (username, email, password, description) VALUES ($1, $2, $3, $4) RETURNING id;`
+	err := r.db.QueryRow(sqlStatement, user.Username, user.Email, user.Password, user.Description).Scan(&user.Id)
 	if err != nil {
 		return nil, err
 	}
-	*/
+	return &user, nil
+}
+
+func (r *userRepository) FindByUsername(username string) (*model.User, error) {
+	sqlStatement := `SELECT * FROM users WHERE username = $1;`
+	var user model.User
+	err := r.db.QueryRow(sqlStatement, username).Scan(
+		&user.Id,
+		&user.BannerId,
+		&user.Email,
+		&user.Username,
+		&user.Password,
+		&user.Description,
+		&user.AvatarPath,
+		&user.NumberOfComments,
+		&user.NumberOfPosts,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *userRepository) FindByEmail(email string) (*model.User, error) {
+	sqlStatement := `SELECT * FROM users WHERE email = $1;`
+	var user model.User
+	err := r.db.QueryRow(sqlStatement, email).Scan(
+		&user.Id,
+		&user.BannerId,
+		&user.Email,
+		&user.Username,
+		&user.Password,
+		&user.Description,
+		&user.AvatarPath,
+		&user.NumberOfComments,
+		&user.NumberOfPosts,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &user, nil
 }

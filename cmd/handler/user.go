@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"github.com/coolrunner1/project/cmd/service"
 	"github.com/go-errors/errors"
-	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -17,13 +16,11 @@ type UserHandler interface {
 
 type userHandler struct {
 	userService service.UserService
-	validator   *validator.Validate
 }
 
 func NewUserHandler(userService service.UserService) UserHandler {
 	return &userHandler{
 		userService: userService,
-		validator:   validator.New(),
 	}
 }
 
@@ -49,5 +46,16 @@ func (h *userHandler) GetUsers(c echo.Context) error {
 }
 
 func (h *userHandler) GetUserById(c echo.Context) error {
-	return c.JSON(http.StatusNotImplemented, "Not implemented")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
+	}
+	user, err := h.userService.GetById(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return echo.NewHTTPError(http.StatusNotFound, "User not found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, user)
 }

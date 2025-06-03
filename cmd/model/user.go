@@ -12,7 +12,7 @@ ToDo: Implement proper auth
 type User struct {
 	Id               int                     `json:"id" db:"id"`
 	Username         string                  `json:"username" db:"username"`
-	Password         string                  `json:"password" db:"password"`
+	Password         string                  `json:"-" db:"password"`
 	Email            string                  `json:"email" db:"email"`
 	Description      gonull.Nullable[string] `json:"description" db:"description"`
 	AvatarPath       gonull.Nullable[string] `json:"avatarPath" db:"avatar_path"`

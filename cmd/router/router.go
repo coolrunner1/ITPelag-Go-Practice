@@ -5,6 +5,7 @@ import (
 	"github.com/coolrunner1/project/cmd/repository"
 	"github.com/coolrunner1/project/cmd/service"
 	"github.com/coolrunner1/project/cmd/storage"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
 
@@ -18,7 +19,8 @@ func categoryRoutes(app *echo.Echo) {
 	if db == nil {
 		panic("DB Not Found")
 	}
-	categoryHandler := handler.NewCategoryHandler(service.NewCategoryService(repository.NewCategoryRepository(db)))
+
+	categoryHandler := handler.NewCategoryHandler(service.NewCategoryService(repository.NewCategoryRepository(db), validator.New()))
 	group := app.Group("/api/v1/categories")
 	group.GET("", categoryHandler.GetCategories)
 	group.GET("/:id", categoryHandler.GetCategory)
@@ -35,10 +37,23 @@ func userRoutes(app *echo.Echo) {
 	userHandler := handler.NewUserHandler(service.NewUserService(repository.NewUserRepository(db)))
 	group := app.Group("/api/v1/users")
 	group.GET("", userHandler.GetUsers)
+	group.GET("/:id", userHandler.GetUserById)
+}
+
+func authRoutes(app *echo.Echo) {
+	db := storage.GetDB()
+	if db == nil {
+		panic("DB Not Found")
+	}
+	authHandler := handler.NewAuthHandler(service.NewAuthService(repository.NewUserRepository(db), validator.New()))
+	group := app.Group("/api/v1/auth")
+	group.POST("/register", authHandler.Register)
+	group.POST("/login", authHandler.Login)
 }
 
 func GetRoutes(app *echo.Echo) {
 	commentRoutes(app)
 	categoryRoutes(app)
 	userRoutes(app)
+	authRoutes(app)
 }

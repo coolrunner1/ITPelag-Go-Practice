@@ -5,7 +5,6 @@ import (
 	"github.com/coolrunner1/project/cmd/dto"
 	"github.com/coolrunner1/project/cmd/service"
 	"github.com/go-errors/errors"
-	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -21,13 +20,11 @@ type CategoryHandler interface {
 
 type categoryHandler struct {
 	categoryService service.CategoryService
-	validator       *validator.Validate
 }
 
 func NewCategoryHandler(categoryService service.CategoryService) CategoryHandler {
 	return &categoryHandler{
 		categoryService: categoryService,
-		validator:       validator.New(),
 	}
 }
 

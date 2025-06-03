@@ -210,7 +210,7 @@ func ApplicationCliInit() {
 			limiterMiddleware := middleware.NewLimiterMiddleware(
 				1000,
 				0.01,
-				2000000,
+				20,
 				3600,
 			)
 			e.Use(limiterMiddleware.Init)

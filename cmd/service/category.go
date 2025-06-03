@@ -21,10 +21,10 @@ type categoryService struct {
 	validator    *validator.Validate
 }
 
-func NewCategoryService(categoryRepo repository.CategoryRepository) CategoryService {
+func NewCategoryService(categoryRepo repository.CategoryRepository, validator *validator.Validate) CategoryService {
 	return &categoryService{
 		categoryRepo: categoryRepo,
-		validator:    validator.New(),
+		validator:    validator,
 	}
 }
 
