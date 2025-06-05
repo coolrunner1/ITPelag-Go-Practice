@@ -12,8 +12,8 @@ type UserRepository interface {
 	Create(c model.User) (*model.User, error)
 	FindByUsername(username string) (*model.User, error)
 	FindByEmail(email string) (*model.User, error)
-	//Update(c model.Category, id int) (*model.Category, error)
-	//DeleteById(id int) error
+	Update(user model.User, id int) (*model.User, error)
+	DeleteById(id int) error
 }
 
 type userRepository struct {
@@ -102,6 +102,38 @@ func (r *userRepository) Create(user model.User) (*model.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *userRepository) Update(user model.User, id int) (*model.User, error) {
+	sqlStatement := `UPDATE users SET username = $1, email = $2, password = $3, description = $4 WHERE id = $5 RETURNING *;`
+	err := r.db.QueryRow(sqlStatement, user.Username, user.Email, user.Password, user.Description, id).Scan(
+		&user.Id,
+		&user.BannerId,
+		&user.Email,
+		&user.Username,
+		&user.Password,
+		&user.Description,
+		&user.AvatarPath,
+		&user.NumberOfPosts,
+		&user.NumberOfComments,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *userRepository) DeleteById(id int) error {
+	sqlStatement := `DELETE FROM users WHERE id = $1;`
+	_, err := r.db.Exec(sqlStatement, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *userRepository) FindByUsername(username string) (*model.User, error) {

@@ -214,7 +214,8 @@ func ApplicationCliInit() {
 				3600,
 			)
 			e.Use(limiterMiddleware.Init)
-			router.GetRoutes(e)
+			myRouter := router.NewRouter(e)
+			myRouter.GetRoutes()
 			e.Logger.Fatal(e.Start(":8085"))
 		},
 	}
