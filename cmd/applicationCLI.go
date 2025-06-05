@@ -2,9 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/coolrunner1/project/cmd/middleware"
+	"github.com/coolrunner1/project/cmd/router"
+	"github.com/coolrunner1/project/cmd/storage"
 	"github.com/coolrunner1/project/utils/filter"
 	"github.com/coolrunner1/project/utils/limiter"
 	"github.com/go-errors/errors"
+	"github.com/labstack/echo/v4"
 	"github.com/spf13/cobra"
 	"time"
 )
@@ -197,6 +201,26 @@ func ApplicationCliInit() {
 	}
 
 	rootCmd.AddCommand(leakyBucketCmd)
+
+	webCmd := &cobra.Command{
+		Use: "web",
+		Run: func(cmd *cobra.Command, args []string) {
+			e := echo.New()
+			storage.InitDB()
+			limiterMiddleware := middleware.NewLimiterMiddleware(
+				1000,
+				0.01,
+				20,
+				3600,
+			)
+			e.Use(limiterMiddleware.Init)
+			myRouter := router.NewRouter(e)
+			myRouter.GetRoutes()
+			e.Logger.Fatal(e.Start(":8085"))
+		},
+	}
+
+	rootCmd.AddCommand(webCmd)
 
 	err := rootCmd.Execute()
 	if err != nil {
