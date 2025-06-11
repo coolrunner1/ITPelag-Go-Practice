@@ -2,8 +2,8 @@ package repository
 
 import (
 	"database/sql"
-	"github.com/coolrunner1/project/cmd/model"
-	"github.com/coolrunner1/project/cmd/storage"
+	"github.com/coolrunner1/project/internal/model"
+	"github.com/coolrunner1/project/internal/storage"
 )
 
 type UserRepository interface {

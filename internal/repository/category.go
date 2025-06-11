@@ -2,7 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"github.com/coolrunner1/project/cmd/model"
+	"github.com/coolrunner1/project/internal/model"
 )
 
 type CategoryRepository interface {

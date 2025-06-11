@@ -2,9 +2,9 @@ package service
 
 import (
 	"fmt"
-	"github.com/coolrunner1/project/cmd/dto"
-	"github.com/coolrunner1/project/cmd/model"
-	"github.com/coolrunner1/project/cmd/repository"
+	"github.com/coolrunner1/project/internal/dto"
+	"github.com/coolrunner1/project/internal/model"
+	"github.com/coolrunner1/project/internal/repository"
 	"github.com/go-playground/validator/v10"
 )
 

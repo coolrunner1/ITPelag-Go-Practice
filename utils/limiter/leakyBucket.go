@@ -11,9 +11,6 @@ type LeakyBucket interface {
 	AddPacket(packetSize uint32) error
 	Run()
 	Stop()
-	getCurrentBucketSize() uint32
-	pushPacket(packetSize uint32)
-	popPacket() uint32
 }
 
 type leakyBucket struct {

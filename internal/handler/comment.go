@@ -2,7 +2,7 @@ package handler
 
 import (
 	"database/sql"
-	"github.com/coolrunner1/project/cmd/repository"
+	"github.com/coolrunner1/project/internal/repository"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/coolrunner1/project/cmd/middleware"
-	"github.com/coolrunner1/project/cmd/router"
-	"github.com/coolrunner1/project/cmd/storage"
+	"github.com/coolrunner1/project/internal/middleware"
+	"github.com/coolrunner1/project/internal/router"
+	"github.com/coolrunner1/project/internal/storage"
 	"github.com/coolrunner1/project/utils/filter"
 	"github.com/coolrunner1/project/utils/limiter"
 	"github.com/go-errors/errors"

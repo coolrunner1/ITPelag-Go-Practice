@@ -2,8 +2,8 @@ package handler
 
 import (
 	"database/sql"
-	"github.com/coolrunner1/project/cmd/dto"
-	"github.com/coolrunner1/project/cmd/service"
+	"github.com/coolrunner1/project/internal/dto"
+	"github.com/coolrunner1/project/internal/service"
 	"github.com/go-errors/errors"
 	"github.com/labstack/echo/v4"
 	"net/http"

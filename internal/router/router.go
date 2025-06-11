@@ -2,21 +2,15 @@ package router
 
 import (
 	"database/sql"
-	"github.com/coolrunner1/project/cmd/handler"
-	"github.com/coolrunner1/project/cmd/repository"
-	"github.com/coolrunner1/project/cmd/service"
-	"github.com/coolrunner1/project/cmd/storage"
+	"github.com/coolrunner1/project/internal/handler"
+	"github.com/coolrunner1/project/internal/repository"
+	"github.com/coolrunner1/project/internal/service"
+	"github.com/coolrunner1/project/internal/storage"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
 
 type Router interface {
-	commentRoutes()
-	categoryRoutes()
-	postRoutes()
-	userRoutes()
-	authRoutes()
-	searchRoutes()
 	GetRoutes()
 }
 
