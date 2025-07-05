@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"github.com/coolrunner1/project/internal/model"
-	"github.com/coolrunner1/project/internal/storage"
 )
 
 type UserRepository interface {
@@ -33,7 +32,7 @@ func (r *userRepository) GetAll(start, limit int) ([]model.User, error) {
 		limit = 15
 	}
 
-	sqlStatement := `SELECT * FROM users LIMIT $1 OFFSET $2;`
+	sqlStatement := `SELECT * FROM users WHERE deleted_at IS NULL LIMIT $1 OFFSET $2;`
 
 	var users []model.User
 
@@ -45,18 +44,7 @@ func (r *userRepository) GetAll(start, limit int) ([]model.User, error) {
 
 	for rows.Next() {
 		var user model.User
-		err := rows.Scan(
-			&user.Id,
-			&user.Email,
-			&user.Username,
-			&user.Password,
-			&user.Description,
-			&user.AvatarPath,
-			&user.BannerPath,
-			&user.NumberOfComments,
-			&user.NumberOfPosts,
-			&user.CreatedAt,
-			&user.UpdatedAt)
+		err := user.ScanFromRow(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -71,22 +59,9 @@ func (r *userRepository) GetAll(start, limit int) ([]model.User, error) {
 }
 
 func (r *userRepository) GetById(id int) (*model.User, error) {
-	db := storage.GetDB()
 	var user model.User
 	sqlStatement := `SELECT * FROM users WHERE id = $1;`
-	err := db.QueryRow(sqlStatement, id).Scan(
-		&user.Id,
-		&user.Email,
-		&user.Username,
-		&user.Password,
-		&user.Description,
-		&user.AvatarPath,
-		&user.BannerPath,
-		&user.NumberOfComments,
-		&user.NumberOfPosts,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
+	err := user.ScanFromRow(r.db.QueryRow(sqlStatement, id))
 
 	if err != nil {
 		return nil, err
@@ -96,8 +71,8 @@ func (r *userRepository) GetById(id int) (*model.User, error) {
 }
 
 func (r *userRepository) Create(user model.User) (*model.User, error) {
-	sqlStatement := `INSERT INTO users (username, email, password, description) VALUES ($1, $2, $3, $4) RETURNING id;`
-	err := r.db.QueryRow(sqlStatement, user.Username, user.Email, user.Password, user.Description).Scan(&user.Id)
+	sqlStatement := `INSERT INTO users (username, email, password, description) VALUES ($1, $2, $3, $4) RETURNING *;`
+	err := user.ScanFromRow(r.db.QueryRow(sqlStatement, user.Username, user.Email, user.Password, user.Description))
 	if err != nil {
 		return nil, err
 	}
@@ -105,20 +80,17 @@ func (r *userRepository) Create(user model.User) (*model.User, error) {
 }
 
 func (r *userRepository) Update(user model.User, id int) (*model.User, error) {
-	sqlStatement := `UPDATE users SET username = $1, email = $2, password = $3, description = $4 WHERE id = $5 RETURNING *;`
-	err := r.db.QueryRow(sqlStatement, user.Username, user.Email, user.Password, user.Description, id).Scan(
-		&user.Id,
-		&user.Email,
-		&user.Username,
-		&user.Password,
-		&user.Description,
-		&user.AvatarPath,
-		&user.BannerPath,
-		&user.NumberOfPosts,
-		&user.NumberOfComments,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
+	sqlStatement :=
+		`UPDATE users
+			SET 
+			    username = $1,
+			    email = $2,
+			    password = $3,
+			    description = $4,
+			    updated_at = CURRENT_TIMESTAMP
+			WHERE id = $5
+			RETURNING *;`
+	err := user.ScanFromRow(r.db.QueryRow(sqlStatement, user.Username, user.Email, user.Password, user.Description, id))
 
 	if err != nil {
 		return nil, err
@@ -128,7 +100,12 @@ func (r *userRepository) Update(user model.User, id int) (*model.User, error) {
 }
 
 func (r *userRepository) DeleteById(id int) error {
-	sqlStatement := `DELETE FROM users WHERE id = $1;`
+	sqlStatement :=
+		`UPDATE users
+		 SET
+		     updated_at = CURRENT_TIMESTAMP,
+		     deleted_at = CURRENT_TIMESTAMP
+		 WHERE id = $1;`
 	_, err := r.db.Exec(sqlStatement, id)
 	if err != nil {
 		return err
@@ -139,18 +116,7 @@ func (r *userRepository) DeleteById(id int) error {
 func (r *userRepository) FindByUsername(username string) (*model.User, error) {
 	sqlStatement := `SELECT * FROM users WHERE username = $1;`
 	var user model.User
-	err := r.db.QueryRow(sqlStatement, username).Scan(
-		&user.Id,
-		&user.Email,
-		&user.Username,
-		&user.Password,
-		&user.Description,
-		&user.AvatarPath,
-		&user.NumberOfComments,
-		&user.NumberOfPosts,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
+	err := user.ScanFromRow(r.db.QueryRow(sqlStatement, username))
 	if err != nil {
 		return nil, err
 	}
@@ -161,18 +127,7 @@ func (r *userRepository) FindByUsername(username string) (*model.User, error) {
 func (r *userRepository) FindByEmail(email string) (*model.User, error) {
 	sqlStatement := `SELECT * FROM users WHERE email = $1;`
 	var user model.User
-	err := r.db.QueryRow(sqlStatement, email).Scan(
-		&user.Id,
-		&user.Email,
-		&user.Username,
-		&user.Password,
-		&user.Description,
-		&user.AvatarPath,
-		&user.NumberOfComments,
-		&user.NumberOfPosts,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
+	err := user.ScanFromRow(r.db.QueryRow(sqlStatement, email))
 	if err != nil {
 		return nil, err
 	}

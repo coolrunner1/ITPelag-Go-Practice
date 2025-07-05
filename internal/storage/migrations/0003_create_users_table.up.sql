@@ -10,5 +10,6 @@ CREATE TABLE IF NOT EXISTS Users
     number_of_posts    int          NOT NULL default (0),
     number_of_comments int          NOT NULL default (0),
     created_at         timestamp    NOT NULL default (CURRENT_TIMESTAMP),
-    updated_at         timestamp    NOT NULL default (CURRENT_TIMESTAMP)
+    updated_at         timestamp    NOT NULL default (CURRENT_TIMESTAMP),
+    deleted_at         timestamp             default (null)
 );
