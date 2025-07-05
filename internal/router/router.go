@@ -72,7 +72,7 @@ func (r *router) searchRoutes() {
 
 func (r *router) postRoutes() {
 	postsHandler := handler.NewPostsHandler()
-	group := r.app.Group("/api/v1/posts")
+	group := r.app.Group("/api/v1")
 	group.GET("/posts", postsHandler.GetAllPosts)
 	group.GET("/posts/:id", postsHandler.GetPostById)
 	group.POST("/posts", postsHandler.CreatePost)
@@ -81,6 +81,22 @@ func (r *router) postRoutes() {
 	group.GET("/communities/:id/posts", postsHandler.GetPostsByCommunity)
 	group.GET("/users/:id/posts", postsHandler.GetPostsByUser)
 }
+
+func (r *router) communityRoutes() {
+	communityHandler := handler.NewCommunityHandler(
+		service.NewCommunityService(
+			repository.NewCommunityRepository(
+				r.db,
+				repository.NewCategoryRepository(r.db),
+				repository.NewUserRepository(r.db),
+			),
+			validator.New(),
+		),
+	)
+	group := r.app.Group("/api/v1/communities")
+	group.GET("", communityHandler.GetAllCommunities)
+}
+
 func (r *router) GetRoutes() {
 	r.commentRoutes()
 	r.categoryRoutes()
@@ -88,4 +104,5 @@ func (r *router) GetRoutes() {
 	r.authRoutes()
 	r.searchRoutes()
 	r.postRoutes()
+	r.communityRoutes()
 }

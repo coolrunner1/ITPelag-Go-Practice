@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS CommunityCategory;
+DROP TABLE IF EXISTS CommunityTag;
+DROP TABLE IF EXISTS CommunityModerator;
+DROP TABLE IF EXISTS CommunityMember;
+DROP TABLE IF EXISTS Communities;

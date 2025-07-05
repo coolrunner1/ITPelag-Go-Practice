@@ -1,8 +1,12 @@
 package handler
 
 import (
+	"database/sql"
+	"github.com/coolrunner1/project/internal/service"
+	"github.com/go-errors/errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"strconv"
 )
 
 type CommunityHandler interface {
@@ -18,15 +22,34 @@ type CommunityHandler interface {
 }
 
 type communityHandler struct {
+	communityService service.CommunityService
 }
 
-func NewCommunityHandler() CommunityHandler {
-	return &communityHandler{}
+func NewCommunityHandler(communityService service.CommunityService) CommunityHandler {
+	return &communityHandler{
+		communityService: communityService,
+	}
 }
 
 func (h *communityHandler) GetAllCommunities(c echo.Context) error {
-	//TODO implement me
-	return c.JSON(http.StatusNotImplemented, "Not Implemented")
+	start, err := strconv.Atoi(c.QueryParam("start"))
+	if err != nil {
+		start = 0
+	}
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil {
+		limit = 15
+	}
+
+	communities, err := h.communityService.GetAll(start, limit)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return echo.NewHTTPError(http.StatusNotFound, "No communities found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, communities)
 }
 
 func (h *communityHandler) GetCommunityById(c echo.Context) error {

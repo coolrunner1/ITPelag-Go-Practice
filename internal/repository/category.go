@@ -8,6 +8,7 @@ import (
 type CategoryRepository interface {
 	GetAll() ([]model.Category, error)
 	GetById(id int) (*model.Category, error)
+	GetAllByCommunityId(id int) ([]model.Category, error)
 	Create(c model.Category) (*model.Category, error)
 	Update(c model.Category, id int) (*model.Category, error)
 	DeleteById(id int) error
@@ -63,6 +64,34 @@ func (r *categoryRepository) GetById(id int) (*model.Category, error) {
 	}
 
 	return &c, nil
+}
+
+func (r *categoryRepository) GetAllByCommunityId(id int) ([]model.Category, error) {
+	sqlStatement :=
+		`SELECT Categories.id, title FROM Categories
+    	 JOIN CommunityCategory ON Categories.id = CommunityCategory.category_id
+         WHERE CommunityCategory.community_id = $1;`
+	rows, err := r.db.Query(sqlStatement, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var categories []model.Category
+
+	for rows.Next() {
+		var c model.Category
+		err := rows.Scan(
+			&c.Id,
+			&c.Title,
+		)
+		if err != nil {
+			return nil, err
+		}
+		categories = append(categories, c)
+	}
+
+	return categories, nil
 }
 
 func (r *categoryRepository) Create(c model.Category) (*model.Category, error) {

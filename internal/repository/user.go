@@ -47,12 +47,12 @@ func (r *userRepository) GetAll(start, limit int) ([]model.User, error) {
 		var user model.User
 		err := rows.Scan(
 			&user.Id,
-			&user.BannerId,
 			&user.Email,
 			&user.Username,
 			&user.Password,
 			&user.Description,
 			&user.AvatarPath,
+			&user.BannerPath,
 			&user.NumberOfComments,
 			&user.NumberOfPosts,
 			&user.CreatedAt,
@@ -76,12 +76,12 @@ func (r *userRepository) GetById(id int) (*model.User, error) {
 	sqlStatement := `SELECT * FROM users WHERE id = $1;`
 	err := db.QueryRow(sqlStatement, id).Scan(
 		&user.Id,
-		&user.BannerId,
 		&user.Email,
 		&user.Username,
 		&user.Password,
 		&user.Description,
 		&user.AvatarPath,
+		&user.BannerPath,
 		&user.NumberOfComments,
 		&user.NumberOfPosts,
 		&user.CreatedAt,
@@ -108,12 +108,12 @@ func (r *userRepository) Update(user model.User, id int) (*model.User, error) {
 	sqlStatement := `UPDATE users SET username = $1, email = $2, password = $3, description = $4 WHERE id = $5 RETURNING *;`
 	err := r.db.QueryRow(sqlStatement, user.Username, user.Email, user.Password, user.Description, id).Scan(
 		&user.Id,
-		&user.BannerId,
 		&user.Email,
 		&user.Username,
 		&user.Password,
 		&user.Description,
 		&user.AvatarPath,
+		&user.BannerPath,
 		&user.NumberOfPosts,
 		&user.NumberOfComments,
 		&user.CreatedAt,
@@ -141,7 +141,6 @@ func (r *userRepository) FindByUsername(username string) (*model.User, error) {
 	var user model.User
 	err := r.db.QueryRow(sqlStatement, username).Scan(
 		&user.Id,
-		&user.BannerId,
 		&user.Email,
 		&user.Username,
 		&user.Password,
@@ -164,7 +163,6 @@ func (r *userRepository) FindByEmail(email string) (*model.User, error) {
 	var user model.User
 	err := r.db.QueryRow(sqlStatement, email).Scan(
 		&user.Id,
-		&user.BannerId,
 		&user.Email,
 		&user.Username,
 		&user.Password,
