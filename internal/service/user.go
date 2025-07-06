@@ -1,19 +1,23 @@
 package service
 
 import (
+	"database/sql"
+	"fmt"
 	"github.com/LukaGiorgadze/gonull/v2"
 	"github.com/coolrunner1/project/internal/dto"
 	"github.com/coolrunner1/project/internal/model"
 	"github.com/coolrunner1/project/internal/repository"
+	"github.com/go-errors/errors"
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {
-	GetAll(start, limit int) ([]model.User, error)
+	GetAll(start, limit int) (*dto.UserSearchResponse, error)
 	GetById(id int) (*model.User, error)
 	Update(userRequest dto.UserUpdateRequest, id int) (*model.User, error)
 	DeleteById(id int) error
+	RestoreById(id int) (*model.User, error)
 }
 
 type userService struct {
@@ -28,12 +32,21 @@ func NewUserService(userRepo repository.UserRepository, validator *validator.Val
 	}
 }
 
-func (s *userService) GetAll(start, limit int) ([]model.User, error) {
+func (s *userService) GetAll(start, limit int) (*dto.UserSearchResponse, error) {
 	return s.userRepo.GetAll(start, limit)
 }
 
 func (s *userService) GetById(id int) (*model.User, error) {
-	return s.userRepo.GetById(id)
+	user, err := s.userRepo.GetById(id)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf(`%w`, ErrNotFound)
+		}
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (s *userService) Update(req dto.UserUpdateRequest, id int) (*model.User, error) {
@@ -53,13 +66,13 @@ func (s *userService) Update(req dto.UserUpdateRequest, id int) (*model.User, er
 		Description: gonull.NewNullable[string](req.Description),
 	}
 
-	if _, err = s.userRepo.GetById(id); err != nil {
-		return nil, err
-	}
-
 	res, err := s.userRepo.Update(*user, id)
 
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("%w", ErrNotFound)
+		}
+
 		return nil, err
 	}
 
@@ -67,8 +80,18 @@ func (s *userService) Update(req dto.UserUpdateRequest, id int) (*model.User, er
 }
 
 func (s *userService) DeleteById(id int) error {
-	if _, err := s.userRepo.GetById(id); err != nil {
+	user, err := s.userRepo.GetById(id)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("%w", ErrNotFound)
+		}
+
 		return err
+	}
+
+	if user.DeletedAt.Valid {
+		return fmt.Errorf("%w", ErrAlreadyDeleted)
 	}
 
 	if err := s.userRepo.DeleteById(id); err != nil {
@@ -76,4 +99,28 @@ func (s *userService) DeleteById(id int) error {
 	}
 
 	return nil
+}
+
+func (s *userService) RestoreById(id int) (*model.User, error) {
+	user, err := s.userRepo.GetById(id)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("%w", ErrNotFound)
+		}
+
+		return nil, err
+	}
+
+	if !user.DeletedAt.Valid {
+		return nil, fmt.Errorf("%w", ErrNotDeleted)
+	}
+
+	user, err = s.userRepo.RestoreById(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }

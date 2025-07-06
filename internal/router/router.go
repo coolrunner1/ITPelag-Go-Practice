@@ -50,9 +50,13 @@ func (r *router) userRoutes() {
 	userHandler := handler.NewUserHandler(service.NewUserService(repository.NewUserRepository(r.db), validator.New()))
 	group := r.app.Group("/api/v1/users")
 	group.GET("", userHandler.GetUsers)
+	group.GET("/my", userHandler.GetMyUser)
+	group.PUT("/my", userHandler.UpdateMyUser)
+	group.DELETE("/my", userHandler.DeleteMyUser)
 	group.GET("/:id", userHandler.GetUserById)
 	group.PUT("/:id", userHandler.UpdateUser)
 	group.DELETE("/:id", userHandler.DeleteUser)
+	group.PATCH("/:id/restore", userHandler.RestoreUser)
 }
 
 func (r *router) authRoutes() {
@@ -95,6 +99,12 @@ func (r *router) communityRoutes() {
 	)
 	group := r.app.Group("/api/v1/communities")
 	group.GET("", communityHandler.GetAllCommunities)
+	group.POST("", communityHandler.CreateCommunity)
+	group.GET("/:id", communityHandler.GetCommunityById)
+	group.PUT("/:id", communityHandler.UpdateCommunity)
+	group.DELETE("/:id", communityHandler.DeleteCommunity)
+	group.GET("/:id/subscribers", communityHandler.GetCommunitySubscribers)
+	group.GET("/:id/moderators", communityHandler.GetCommunityModerators)
 }
 
 func (r *router) GetRoutes() {

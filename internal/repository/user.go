@@ -2,17 +2,20 @@ package repository
 
 import (
 	"database/sql"
+	"github.com/LukaGiorgadze/gonull/v2"
+	"github.com/coolrunner1/project/internal/dto"
 	"github.com/coolrunner1/project/internal/model"
 )
 
 type UserRepository interface {
-	GetAll(start, limit int) ([]model.User, error)
+	GetAll(start, limit int) (*dto.UserSearchResponse, error)
 	GetById(id int) (*model.User, error)
 	Create(c model.User) (*model.User, error)
 	FindByUsername(username string) (*model.User, error)
 	FindByEmail(email string) (*model.User, error)
 	Update(user model.User, id int) (*model.User, error)
 	DeleteById(id int) error
+	RestoreById(id int) (*model.User, error)
 }
 
 type userRepository struct {
@@ -23,7 +26,7 @@ func NewUserRepository(db *sql.DB) UserRepository {
 	return &userRepository{db: db}
 }
 
-func (r *userRepository) GetAll(start, limit int) ([]model.User, error) {
+func (r *userRepository) GetAll(start, limit int) (*dto.UserSearchResponse, error) {
 	if start < 0 {
 		start = 0
 	}
@@ -55,7 +58,17 @@ func (r *userRepository) GetAll(start, limit int) ([]model.User, error) {
 		return nil, sql.ErrNoRows
 	}
 
-	return users, nil
+	var resp dto.UserSearchResponse
+
+	err = r.db.QueryRow("SELECT COUNT(*) FROM Users WHERE deleted_at IS NULL").Scan(&resp.Total)
+
+	if err != nil {
+		return nil, err
+	}
+
+	resp.Data = users
+
+	return &resp, nil
 }
 
 func (r *userRepository) GetById(id int) (*model.User, error) {
@@ -65,6 +78,17 @@ func (r *userRepository) GetById(id int) (*model.User, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	if user.DeletedAt.Valid {
+		user.Username = "DELETED"
+		user.Email = "DELETED"
+		user.Description = gonull.Nullable[string]{}
+		user.AvatarPath = gonull.Nullable[string]{
+			Val:   "deleted.png",
+			Valid: true,
+		}
+		user.BannerPath = gonull.Nullable[string]{}
 	}
 
 	return &user, nil
@@ -111,6 +135,23 @@ func (r *userRepository) DeleteById(id int) error {
 		return err
 	}
 	return nil
+}
+
+func (r *userRepository) RestoreById(id int) (*model.User, error) {
+	var user model.User
+
+	sqlStatement :=
+		`UPDATE users
+		 SET
+		     updated_at = CURRENT_TIMESTAMP,
+		     deleted_at = NULL
+		 WHERE id = $1
+		 RETURNING *;`
+	err := user.ScanFromRow(r.db.QueryRow(sqlStatement, id))
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (r *userRepository) FindByUsername(username string) (*model.User, error) {

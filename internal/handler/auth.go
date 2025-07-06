@@ -32,7 +32,11 @@ func (h *authHandler) Register(c echo.Context) error {
 
 	res, err := h.authService.Register(*req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		if errors.Is(err, service.ErrValidation) {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusCreated, res)

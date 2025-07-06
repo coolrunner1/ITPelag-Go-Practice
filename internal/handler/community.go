@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"database/sql"
+	"github.com/coolrunner1/project/internal/dto"
 	"github.com/coolrunner1/project/internal/service"
 	"github.com/go-errors/errors"
 	"github.com/labstack/echo/v4"
@@ -19,6 +19,7 @@ type CommunityHandler interface {
 	SubscribeToCommunity(c echo.Context) error
 	UnsubscribeFromCommunity(c echo.Context) error
 	GetCommunitySubscribers(c echo.Context) error
+	GetCommunityModerators(c echo.Context) error
 }
 
 type communityHandler struct {
@@ -43,9 +44,6 @@ func (h *communityHandler) GetAllCommunities(c echo.Context) error {
 
 	communities, err := h.communityService.GetAll(start, limit)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return echo.NewHTTPError(http.StatusNotFound, "No communities found")
-		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
@@ -53,20 +51,80 @@ func (h *communityHandler) GetAllCommunities(c echo.Context) error {
 }
 
 func (h *communityHandler) GetCommunityById(c echo.Context) error {
-	//TODO implement me
-	return c.JSON(http.StatusNotImplemented, "Not Implemented")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid community id")
+	}
+	community, err := h.communityService.GetById(id)
+	if err != nil {
+		if errors.Is(err, service.ErrNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "Community not found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, community)
+}
+
+func (h *communityHandler) CreateCommunity(c echo.Context) error {
+	req := &dto.CommunityCreateRequest{}
+	if err := c.Bind(req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	res, err := h.communityService.Create(req, 1)
+	if err != nil {
+		if errors.Is(err, service.ErrValidation) || errors.Is(err, service.ErrNotFound) {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusCreated, res)
 }
 
 func (h *communityHandler) UpdateCommunity(c echo.Context) error {
-	//TODO implement me
-	return c.JSON(http.StatusNotImplemented, "Not Implemented")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid community ID")
+	}
+	req := &dto.CommunityUpdateRequest{}
+
+	if err := c.Bind(req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	updated, err := h.communityService.Update(req, id, 1)
+	if err != nil {
+		if errors.Is(err, service.ErrNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "Community not found")
+		}
+		if errors.Is(err, service.ErrValidation) {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, updated)
 }
 
 func (h *communityHandler) DeleteCommunity(c echo.Context) error {
-	//TODO implement me
-	return c.JSON(http.StatusNotImplemented, "Not Implemented")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid category ID")
+	}
+
+	err = h.communityService.DeleteById(id, 1)
+	if err != nil {
+		if errors.Is(err, service.ErrNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "No community found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.NoContent(http.StatusNoContent)
 }
 
+// TODO: rename
 func (h *communityHandler) GetCommunityByUserSubscriptions(c echo.Context) error {
 	//TODO implement me
 	return c.JSON(http.StatusNotImplemented, "Not Implemented")
@@ -87,7 +145,7 @@ func (h *communityHandler) GetCommunitySubscribers(c echo.Context) error {
 	return c.JSON(http.StatusNotImplemented, "Not Implemented")
 }
 
-func (h *communityHandler) CreateCommunity(c echo.Context) error {
+func (h *communityHandler) GetCommunityModerators(c echo.Context) error {
 	//TODO implement me
 	return c.JSON(http.StatusNotImplemented, "Not Implemented")
 }

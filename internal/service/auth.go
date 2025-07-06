@@ -11,8 +11,8 @@ import (
 )
 
 type AuthService interface {
-	Register(req dto.RegisterRequest) (*model.User, error)
-	Login(req dto.LoginRequest) (*model.User, error)
+	Register(req dto.RegisterRequest) (*dto.AuthResponse, error)
+	Login(req dto.LoginRequest) (*dto.AuthResponse, error)
 }
 
 type authService struct {
@@ -27,7 +27,7 @@ func NewAuthService(userRepo repository.UserRepository, validator *validator.Val
 	}
 }
 
-func (s *authService) Register(req dto.RegisterRequest) (*model.User, error) {
+func (s *authService) Register(req dto.RegisterRequest) (*dto.AuthResponse, error) {
 	if err := s.validator.Struct(req); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrValidation, err.Error())
 	}
@@ -53,10 +53,15 @@ func (s *authService) Register(req dto.RegisterRequest) (*model.User, error) {
 		return nil, err
 	}
 
-	return registered, nil
+	var resp dto.AuthResponse
+
+	resp.User = registered
+	resp.Token = "Placeholder"
+
+	return &resp, nil
 }
 
-func (s *authService) Login(req dto.LoginRequest) (*model.User, error) {
+func (s *authService) Login(req dto.LoginRequest) (*dto.AuthResponse, error) {
 	if err := s.validator.Struct(req); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrValidation, err.Error())
 	}
@@ -77,12 +82,15 @@ func (s *authService) Login(req dto.LoginRequest) (*model.User, error) {
 		}
 	}
 
-	fmt.Println(user)
-
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrValidation, err.Error())
 	}
 
-	return user, nil
+	var resp dto.AuthResponse
+
+	resp.User = user
+	resp.Token = "Placeholder"
+
+	return &resp, nil
 }
