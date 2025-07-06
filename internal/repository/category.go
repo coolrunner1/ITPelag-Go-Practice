@@ -18,6 +18,8 @@ type categoryRepository struct {
 	db *sql.DB
 }
 
+var categorySelect = "Categories.id, Categories.title"
+
 func NewCategoryRepository(db *sql.DB) CategoryRepository {
 	return &categoryRepository{
 		db: db,
@@ -25,7 +27,7 @@ func NewCategoryRepository(db *sql.DB) CategoryRepository {
 }
 
 func (r *categoryRepository) GetAll() ([]model.Category, error) {
-	sqlStatement := `SELECT * FROM categories;`
+	sqlStatement := `SELECT ` + categorySelect + ` FROM categories;`
 
 	var categories []model.Category
 
@@ -56,7 +58,7 @@ func (r *categoryRepository) GetAll() ([]model.Category, error) {
 
 func (r *categoryRepository) GetById(id int) (*model.Category, error) {
 	var c model.Category
-	sqlStatement := `SELECT * FROM categories WHERE id = $1;`
+	sqlStatement := `SELECT ` + categorySelect + ` FROM categories WHERE id = $1;`
 	err := r.db.QueryRow(sqlStatement, id).Scan(&c.Id, &c.Title)
 
 	if err != nil {
@@ -68,7 +70,7 @@ func (r *categoryRepository) GetById(id int) (*model.Category, error) {
 
 func (r *categoryRepository) GetAllByCommunityId(id int) ([]model.Category, error) {
 	sqlStatement :=
-		`SELECT Categories.id, title FROM Categories
+		`SELECT ` + categorySelect + ` FROM Categories
     	 JOIN CommunityCategory ON Categories.id = CommunityCategory.category_id
          WHERE CommunityCategory.community_id = $1;`
 	rows, err := r.db.Query(sqlStatement, id)

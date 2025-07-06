@@ -29,6 +29,8 @@ func NewCommunityRepository(db *sql.DB, categoryRepository CategoryRepository, u
 	}
 }
 
+var communitySelect = "id, name, description, banner_path, avatar_path, owner_id, number_of_members, number_of_posts, created_at"
+
 func (r *communityRepository) GetAll(start, limit int) (*dto.CommunitySearchResponse, error) {
 	if start < 0 {
 		start = 0
@@ -38,7 +40,7 @@ func (r *communityRepository) GetAll(start, limit int) (*dto.CommunitySearchResp
 		limit = 15
 	}
 
-	sqlStatement := `SELECT * FROM Communities LIMIT $1 OFFSET $2;`
+	sqlStatement := `SELECT ` + communitySelect + ` FROM Communities LIMIT $1 OFFSET $2;`
 
 	var communities []model.Community
 
@@ -96,7 +98,7 @@ func (r *communityRepository) GetAll(start, limit int) (*dto.CommunitySearchResp
 }
 
 func (r *communityRepository) GetById(id int) (*model.Community, error) {
-	sqlStatement := `SELECT * FROM Communities WHERE id = $1;`
+	sqlStatement := `SELECT ` + communitySelect + ` FROM Communities WHERE id = $1;`
 
 	var community model.Community
 

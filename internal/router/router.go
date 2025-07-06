@@ -75,11 +75,20 @@ func (r *router) searchRoutes() {
 }
 
 func (r *router) postRoutes() {
-	postsHandler := handler.NewPostsHandler()
+	postsHandler := handler.NewPostsHandler(
+		service.NewPostService(
+			repository.NewPostRepository(
+				r.db,
+				repository.NewCategoryRepository(r.db),
+				repository.NewUserRepository(r.db),
+			),
+			validator.New(),
+		),
+	)
 	group := r.app.Group("/api/v1")
 	group.GET("/posts", postsHandler.GetAllPosts)
 	group.GET("/posts/:id", postsHandler.GetPostById)
-	group.POST("/posts", postsHandler.CreatePost)
+	group.POST("/communities/:id/posts", postsHandler.CreatePost)
 	group.PUT("/posts/:id", postsHandler.UpdatePost)
 	group.DELETE("/posts/:id", postsHandler.DeletePost)
 	group.GET("/communities/:id/posts", postsHandler.GetPostsByCommunity)
